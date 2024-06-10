@@ -50,7 +50,7 @@ int main(){
     readData(type);
     InputLayer inp(fpTrain,fpTest,TrainData,TestData,1,inputHeight,inputWidth);
     ConvLayer conv(1, inputHeight, inputWidth, 1, 3, 3, 4, 1, 1);
-    ThirdReLULayer thiRel(4, inputHeight, inputWidth);
+    ThirdReLULayer thiRel(4, inputHeight, inputWidth, 0);
     MaxPoolingLayer pool(4, inputHeight, inputWidth, 4, 2, 2, 2, 2);
     ThirdSpanLayer span(4, inputHeight / 2, inputWidth / 2);
     LinearLayer line(inputHeight * inputWidth, 128);

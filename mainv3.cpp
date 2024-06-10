@@ -51,15 +51,15 @@ int main(){
     InputLayer inp(fpTrain,fpTest,TrainData,TestData,1,inputHeight,inputWidth);
 
     ConvLayer conv(1, inputHeight, inputWidth, 1, 3, 3, 8, 1, 1);
-    ThirdReLULayer thiRel(8, inputHeight, inputWidth);
+    ThirdReLULayer thiRel(8, inputHeight, inputWidth, 0);
     MaxPoolingLayer pool(8, inputHeight, inputWidth, 8, 2, 2, 2, 1);
 
     ConvLayer conv1(8, inputHeight / 2, inputWidth / 2, 8, 3, 3, 16, 1, 1);
-    ThirdReLULayer thiRel1(16, inputHeight / 2, inputWidth / 2);
+    ThirdReLULayer thiRel1(16, inputHeight / 2, inputWidth / 2, 0);
     MaxPoolingLayer pool1(16, inputHeight / 2, inputWidth / 2, 16, 2, 2, 2, 1);
 
     ConvLayer conv2(16, inputHeight / 4, inputWidth / 4, 16, 3, 3, 32, 1, 1);
-    ThirdReLULayer thiRel2(32, inputHeight / 4, inputWidth / 4);
+    ThirdReLULayer thiRel2(32, inputHeight / 4, inputWidth / 4, 0);
 
     ThirdSpanLayer span(32, inputHeight / 4, inputWidth / 4);
     LinearLayer line(2 * inputHeight * inputWidth, 128);

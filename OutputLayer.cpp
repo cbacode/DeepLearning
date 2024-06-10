@@ -64,8 +64,7 @@ void OutputLayer::backward(int tar){
 
     for(int i = 0;i < batchSize;i++){
         for(int j = 0;j < outWidth;j++){
-            //int iter = ran[tar + i];
-            int iter = tar + i;
+            int iter = ran[tar + i];
             double num = trainResult.arr[iter][j];
             if(abs(num) < eps){
                 int sign = (num >= 0) ? 1 : -1;
@@ -118,8 +117,7 @@ void OutputLayer::forward(int tar,const vector<Array>& inp){
             fprintf(fpDebug,"Unable to read batch label for training.\n");
             exit(0);
         }
-        //int iter = ran[tar + i];
-        int iter = tar + i;
+        int iter = ran[tar + i];
         for(int j = 0;j < outWidth;j++){
             trainResult.arr[iter][j] = inp[i].arr[j][0];
             if(trainResult.arr[iter][j] > trainResult.arr[iter][max]){
