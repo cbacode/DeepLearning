@@ -47,10 +47,17 @@ bool ThirdArray::CheckFinite(void){
 }
 
 Array ThirdConv(ThirdArray inp,ThirdArray ker,int pad,int stride){
+    //fprintf(fpDebug,"In Conv Function.\n");
     int len_hei = (inp.height + 2 * pad - ker.height) / stride + 1;
     int len_wid = (inp.width + 2 * pad - ker.width) / stride + 1;
+    //fprintf(fpDebug,"len_hei = %d\n",len_hei);
+    //fprintf(fpDebug,"len_wid = %d\n",len_wid);
+    //fprintf(fpDebug,"inp_hei = %d\n",inp.height);
+    //fprintf(fpDebug,"inp_wid = %d\n",inp.width);
     Array res(len_hei,len_wid);
     for(int i = 0;i < inp.depth;i++){
+        //res.PrintArray(fpDebug);
+        //fprintf(fpDebug,"i = %d\n",i);
         res = res + Conv(inp.thiArr[i], ker.thiArr[i], pad, stride);
     }
     return res;

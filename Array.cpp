@@ -166,6 +166,10 @@ double Array::addTogether(void){
 Array Conv(Array inp,Array ker,int pad,int stride){
     int len_hei = (inp.height + 2 * pad - ker.height) / stride + 1;
     int len_wid = (inp.width + 2 * pad - ker.width) / stride + 1;
+    //fprintf(fpDebug,"len_hei = %d\n",len_hei);
+    //fprintf(fpDebug,"len_wid = %d\n",len_wid);
+    //fprintf(fpDebug,"inp_hei = %d\n",inp.height);
+    //fprintf(fpDebug,"inp_wid = %d\n",inp.width);
     Array res(len_hei,len_wid);
     for(int i = 0;i < len_hei;i++){
         for(int j = 0;j < len_wid;j++){

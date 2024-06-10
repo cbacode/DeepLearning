@@ -1,0 +1,3 @@
+d:
+cd D:\docs\00code\DeepLearningv7\sr
+python dataprovider.py
