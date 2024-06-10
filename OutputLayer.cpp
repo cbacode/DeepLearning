@@ -13,9 +13,8 @@
 //    Array loss;
 //    Array error;
 
-OutputLayer::OutputLayer(ifstream* fpTra, ifstream* fpTes, int batch, int numTrain, int numTest, int outWid){
+OutputLayer::OutputLayer(ifstream* fpTra, ifstream* fpTes, int numTrain, int numTest, int outWid){
     outWidth = outWid;
-    batchSize = batch;
     numTrainData = numTrain;
     numTestData = numTest;
     //final result will be compiled for save
@@ -26,28 +25,27 @@ OutputLayer::OutputLayer(ifstream* fpTra, ifstream* fpTes, int batch, int numTra
     testPredict.resize(numTest);
     testTruth.resize(numTest);
 
-    //loss will be compute while front propagation
+    //loss will be compute while backward propagation
     loss.resize(outWidth);
 
-    error.ChangeSize(outWidth,1);
+    for(int i = 0;i < batchSize;i++){
+        Array tmp(outWidth,1);
+        error.push_back(tmp);
+    }
     
-    //fprintf(fpDebug, "Before GetLabel.\n");
     GetLabel(fpTra,numTrain);
     for(int i = 0;i < numTrainData;i++){
         trainTruth[i] = label[i];
-        //trainTruth[i] = 1;
     }
     if(!quiet){
         printf("Training label Successfully loaded...\n");
         fprintf(fpResult, "Training label Successfully loaded...\n");
         fflush(fpResult);
     }
-    //trainTruth.PrintArray(fpDebug);
 
     GetLabel(fpTes,numTest);
     for(int i = 0;i < numTestData;i++){
         testTruth[i] = label[i];
-        //testTruth[i] = 1;
     }
     if(!quiet){
         printf("Testing label Successfully loaded...\n");
@@ -61,10 +59,13 @@ void OutputLayer::backward(int tar){
     // Use loss function of - 1/N * y * log(a)
     // Sparse Cross-Entropy Loss Function
     for(int j = 0;j < outWidth;j++){
-        error.arr[j][0] = 0;
         loss[j] = 0;
-        for(int i = 0;i < batchSize;i++){
-            int iter = ran[tar + i];
+    }
+
+    for(int i = 0;i < batchSize;i++){
+        for(int j = 0;j < outWidth;j++){
+            //int iter = ran[tar + i];
+            int iter = tar + i;
             double num = trainResult.arr[iter][j];
             if(abs(num) < eps){
                 int sign = (num >= 0) ? 1 : -1;
@@ -74,34 +75,26 @@ void OutputLayer::backward(int tar){
                 int sign = (num >= 0) ? 1 : -1;
                 num = (1 - eps) * sign;
             }
+            //fprintf(fpDebug, "trainTruth[iter] = %d \t iter = %d \n",trainTruth[iter],iter);
             int tmp = (trainTruth[iter] == j) ? 1 : 0;
-            error.arr[j][0] += (num - tmp);
+            error[i].arr[j][0] = (num - tmp);
             loss[j] += (-tmp) * log(num) / batchSize;
         }
-        // error.arr[j][0] /= batchSize;
-        // loss[j] /= batchSize;
+        
+        //error[i].PrintArray(fpDebug);
     }
 
-    //fprintf(fpDebug, "In OutputLayer : before totalLoss\n");
-    totalLoss = 0;
     for(int j = 0;j < outWidth;j++){
         totalLoss += loss[j];
     }
-    // totalLoss /= batchSize;
 
-    accuracy = 0;
     for(int i = 0;i < batchSize;i++){
-        int iter = ran[tar + i];
-        if(trainPredict[iter] == trainTruth[iter]){
-            accuracy += 1;
+        if(!error[i].CheckFinite()){
+            fprintf(fpDebug, "In OutputLayer : Array called error\n");
+            fflush(fpDebug);
+            exit(0);
         }
-    }
-    accuracy /= batchSize;
-
-    if(!error.CheckFinite()){
-        fprintf(fpDebug, "In OutputLayer : Array called error\n");
-        fflush(fpDebug);
-        exit(0);
+        //error[i].Bound(minStep,maxStep);
     }
 
     bool check = true;
@@ -115,63 +108,65 @@ void OutputLayer::backward(int tar){
         fflush(fpDebug);
         exit(0);
     }
-
-    // error = LearningRate * error;
-    // fprintf(fpDebug,"In OutputLayer.error: \n");
-    // error.PrintArray(fpDebug);
-    error.Bound(minStep,maxStep);
-    // if(tar == batchSize){
-    //     fprintf(fpDebug,"loss[batchSize] = \n");
-    //     for(int j = 0;j < outWidth;j++){
-    //         fprintf(fpDebug,"%llf\n",loss[j]);
-    //     }
-    //     fprintf(fpDebug,"\nerror[batchSize] = \n");
-    //     error.PrintArray(fpDebug);
-    // }
     return;
 }
 
-void OutputLayer::forward(int tar,Array* res){
+void OutputLayer::forward(int tar,const vector<Array>& inp){
     int max = 0;
-    int iter = ran[tar];
-    for(int i = 0;i < outWidth;i++){
-        trainResult.arr[iter][i] = res->arr[i][0];
-        if(trainResult.arr[iter][i] > trainResult.arr[iter][max]){
-            max = i;
+    for(int i = 0;i < batchSize;i++){
+        if(tar + i > TrainData){
+            fprintf(fpDebug,"Unable to read batch label for training.\n");
+            exit(0);
+        }
+        //int iter = ran[tar + i];
+        int iter = tar + i;
+        for(int j = 0;j < outWidth;j++){
+            trainResult.arr[iter][j] = inp[i].arr[j][0];
+            if(trainResult.arr[iter][j] > trainResult.arr[iter][max]){
+                max = j;
+            }
+        }
+        trainPredict[iter] = max;
+        if(trainPredict[iter] == trainTruth[iter]){
+            accuracy += 1;
         }
     }
-    trainPredict[iter] = max;
-    if(tar == batchSize){
-        fprintf(fpDebug,"trainPredict[batchSize] = %d\n",trainPredict[iter]);
-        fprintf(fpDebug,"trainTruth[batchSize] = %d\n",trainTruth[iter]);
-        fprintf(fpDebug,"trainResult[batchSize] = \n");
-        res->PrintArray(fpDebug);
-    }
-    //for(int i = 0;i < outWidth;i++){
-    //    fprintf(fpDebug,"%llf  ",trainResult.arr[iter][i]);
-    //}
-    //fprintf(fpDebug,"\n");
-    
     return;
 }
 
-void OutputLayer::TestClassify(int iter,Array* res){
+void OutputLayer::TestForward(int tar,const vector<Array>& inp){
     int max = 0;
-    for(int i = 0;i < outWidth;i++){
-        testResult.arr[iter][i] = res->arr[i][0];
-        if(testResult.arr[iter][i] > testResult.arr[iter][max]){
-            max = i;
+    for(int i = 0;i < batchSize;i++){
+        int iter = tar + i;
+        for(int j = 0;j < outWidth;j++){
+            testResult.arr[iter][j] = inp[i].arr[j][0];
+            if(testResult.arr[iter][j] > testResult.arr[iter][max]){
+                max = j;
+            }
         }
+        testPredict[iter] = max;
     }
-    testPredict[iter] = max;
     return;
 }
 
 void OutputLayer::ComputeAccuracy(void){
+    accuracy = 0;
     for(int i = 0;i < numTestData;i++){
         if(testPredict[i] == testTruth[i]){
             accuracy += 1;
         }
     }
     accuracy /= numTestData;
+    return;
+}
+
+void OutputLayer::ComputeTrainAccuracy(void){
+    accuracy = 0;
+    for(int i = 0;i < numTrainData;i++){
+        if(trainPredict[i] == trainTruth[i]){
+            accuracy += 1;
+        }
+    }
+    accuracy /= numTrainData;
+    return;
 }

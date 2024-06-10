@@ -1,5 +1,8 @@
 #include "DeepLearning.h"
-void readData(void){
+// type == 1 MNIST
+// type == 2 FashionMNIST
+// type == 3 SR
+void readData(int type){
     fopen_s(&fpDebug, "./Debug.txt","w");
     if(fpDebug == NULL){
         printf("Error: Unable to open debug file\n");
@@ -7,6 +10,13 @@ void readData(void){
     }
     //TestArray(fpDebug);
     //TestSign(fpDebug);
+    //TestSingleConv(fpDebug);
+    //TestSpread(fpDebug);
+    //TestDiffConv(fpDebug);
+    //TestDiffLinear(fpDebug);
+    //TestDiffBatchNorm(fpDebug);
+    //TestMaxPooling(fpDebug);
+    //TestThiRel(fpDebug);
    
     fopen_s(&fpResult, "./Result.txt","w");
     if(fpResult == NULL){
@@ -14,10 +24,30 @@ void readData(void){
         exit(0);
     }
 
-    // MNIST
-    fpTrain = new ifstream("./train-images.idx3-ubyte",ios::binary);
-    // fashion MNIST
-    // fpTrain = new ifstream("./train-images-idx3-ubyte",ios::binary);
+    switch(type){
+        case MNIST:
+        fpTrain = new ifstream("./MNIST/train-images.idx3-ubyte",ios::binary);
+        fpTest = new ifstream("./MNIST/t10k-images.idx3-ubyte",ios::binary);
+        fpTrainLabel = new ifstream("./MNIST/train-labels.idx1-ubyte",ios::binary);
+        fpTestLabel = new ifstream("./MNIST/t10k-labels.idx1-ubyte",ios::binary);
+        break;
+        case FashionMNIST:
+        fpTrain = new ifstream("./FashionMNIST/train-images-idx3-ubyte",ios::binary);
+        fpTest = new ifstream("./FashionMNIST/t10k-images-idx3-ubyte",ios::binary);
+        fpTrainLabel = new ifstream("./FashionMNIST/train-labels-idx1-ubyte",ios::binary);
+        fpTestLabel = new ifstream("./FashionMNIST/t10k-labels-idx1-ubyte",ios::binary);
+        break;
+        case SR:
+        fpTrain = new ifstream("./sr/train-images.bin",ios::binary);
+        fpTest = new ifstream("./sr/test-images.bin",ios::binary);
+        fpTrainLabel= new ifstream("./sr/train-labels.bin",ios::binary);
+        fpTestLabel = new ifstream("./sr/test-labels.bin",ios::binary);
+        break;
+        default:
+        printf("Error input type.\n");
+        exit(0);
+        break;
+    }
     if(!fpTrain->is_open() || fpTrain == NULL){
         printf("Error: Unable to open training file\n");
         exit(0);
@@ -25,10 +55,6 @@ void readData(void){
     // Defining checking function of the file
     CheckTrainingPictureFile(fpTrain);
 
-    // MNIST
-    fpTest = new ifstream("./t10k-images.idx3-ubyte",ios::binary);
-    // fashion MNIST
-    // fpTest = fopen("./t10k-images-idx3-ubyte","r");
     if(!fpTest->is_open() || fpTest == NULL){
         printf("Error: Unable to open testing file\n");
         exit(0);
@@ -40,27 +66,35 @@ void readData(void){
     // one gray picture or other material is loaded 
     // each time the function is called.
 
-    // MNIST
-    fpTrainLabel = new ifstream("./train-labels.idx1-ubyte",ios::binary);
-    // fashion MNIST
-    // fpTrainLabel = new ifstream("./train-labels-idx1-ubyte",ios::binary);
     if(!fpTrainLabel->is_open() || fpTrainLabel == NULL){
         printf("Error: Unable to open training label file\n");
         exit(0);
     }
     // Defining checking function of the file
-    CheckTrainingLabelFile(fpTrainLabel);
-
-    // MNIST
-    fpTestLabel = new ifstream("./t10k-labels.idx1-ubyte",ios::binary);
-    // fashion MNIST
-    // fpTestLabel = new ifstream("./t10k-labels-idx1-ubyte",ios::binary);
+    switch(type){
+        case MNIST:
+        case FashionMNIST:
+        CheckTrainingLabelFile(fpTrainLabel);
+        break;
+        case SR:
+        CheckTrainingPictureFile(fpTrainLabel);
+        break;
+    }
+    
     if(!fpTestLabel->is_open() || fpTestLabel == NULL){
         printf("Error: Unable to open testing label file\n");
         exit(0);
     }
     // Defining checking function of the file
-    CheckTestingLabelFile(fpTestLabel);
+    switch(type){
+        case MNIST:
+        case FashionMNIST:
+        CheckTestingLabelFile(fpTestLabel);
+        break;
+        case SR:
+        CheckTestingPictureFile(fpTestLabel);
+        break;
+    }
 }
 
 void CheckTrainingPictureFile(ifstream* fp){
@@ -85,7 +119,6 @@ void CheckTrainingPictureFile(ifstream* fp){
     // The relation can be wrong, but now row = col 
     // So this is not important
     int numRows = GetNumber(fp);
-    //fread(&numRows,sizeof(int),1,fp);
     if(numRows != inputHeight){
         printf("Error : Different training picture height size.\n");
         printf("Warning : The number read is %d. \n", numImages);

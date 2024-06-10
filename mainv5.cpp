@@ -17,7 +17,7 @@ double minStep = eps;
 double maxStep = 1e5;
 double regular = 1e-4;
 
-int TrainData = 4000;
+int TrainData = 900;
 int TestData = 320;
 int inputDepth = 1;
 int inputWidth = 256; 
@@ -25,7 +25,7 @@ int inputHeight = 256;
 // number of choice each task
 int outputWidth = 10;
 // A epoch means running through whole training set
-int maxEpoch = 10;
+int maxEpoch = 1;
 // Because of multiple thread, please go to DeepLearning.h
 // to change batchSize
 // int batchSize = 60;

@@ -3,31 +3,41 @@
 SpanLayer::SpanLayer(int h, int w){
     height = h;
     width = w;
-    output.ChangeSize(h*w,1);
-    error.ChangeSize(h,w);
+    for(int i = 0;i < batchSize;i++){
+        Array tmp(height,width);
+        error.push_back(tmp);
+    }
+    for(int i = 0;i < batchSize;i++){
+        Array tmp(height*width,1);
+        output.push_back(tmp);
+    }
 }
 
-void SpanLayer::forward(Array* input){
-    if(input->width != width || input->height != height){
-        printf("Error : Unable to compute Span Forward\n");
-        exit(0);
-    }
-    for(int i = 0;i < height;i++){
-        for(int j = 0;j < width;j++){
-            output.arr[i * width + j][0] = input->arr[i][j];
+void SpanLayer::forward(const vector<Array>& inp){
+    for(int n = 0;n < batchSize;n++){
+        if(inp[n].width != width || inp[n].height != height){
+            printf("Error : Unable to compute Span Forward\n");
+            exit(0);
+        }
+        for(int i = 0;i < height;i++){
+            for(int j = 0;j < width;j++){
+                output[n].arr[i * width + j][0] = inp[n].arr[i][j];
+            }
         }
     }
     return;
 }
 
-void SpanLayer::backward(Array* err){
-    if(err->width != 1 || err->height != width * height){
-        printf("Error : Unable to compute Span backward\n");
-        exit(0);
-    }
-    for(int i = 0;i < height;i++){
-        for(int j = 0;j < width;j++){
-            error.arr[i][j] = err->arr[i * width + j][0];
+void SpanLayer::backward(const vector<Array>& err){
+    for(int n = 0;n < batchSize;n++){
+        if(err[n].width != 1 || err[n].height != width * height){
+            printf("Error : Unable to compute Span backward\n");
+            exit(0);
+        }
+        for(int i = 0;i < height;i++){
+            for(int j = 0;j < width;j++){
+                error[n].arr[i][j] = err[n].arr[i * width + j][0];
+            }
         }
     }
     return;

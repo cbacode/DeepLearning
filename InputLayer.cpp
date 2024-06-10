@@ -9,27 +9,32 @@
 //    int inpHeight;
 //    Array output;
 
-InputLayer::InputLayer(ifstream* fpTrain, ifstream* fpTest, int batch, int train, int test, int height, int width){
-    numBatch = batch;
+InputLayer::InputLayer(ifstream* fpTrain, ifstream* fpTest, int train, int test, int depth, int height, int width){
     numTrainData = train;
     numTestData = test;
-    inpWidth = width;
-    inpHeight = height;
+    
+    outDepth = depth;
+    outHeight = height;
+    outWidth = width;
+
+    ran.resize(numTrainData);
+    for(int i = 0;i < batchSize;i++){
+        ThirdArray tmp(outDepth,outHeight,outWidth);
+        output.push_back(tmp);
+    }
 
     for(int i = 0;i < train;i++){
         GetPicture(fpTrain);
-        Array dat(height,width);
-        dat.height = height;
-        dat.width = width;
-        for(int j = 0;j < height;j++){
-            for(int k = 0;k < width;k++){
-                dat.arr[j][k] = (double)pic[j][k] / 256.0;
+        ThirdArray dat(depth,height,width);
+        for(int j = 0;j < depth;j++){
+            for(int k = 0;k < height;k++){
+                for(int l = 0;l < width;l++){
+                    dat.thiArr[j].arr[k][l] = (double)pic[k][l] / 256.0;
+                }
             }
         }
         trainData.push_back(dat);
     }
-    //fclose(fpTrain);
-    //trainData[0].PrintArray(fpDebug);
 
     if(!quiet){
         printf("Training Data Successfully loaded...\n");
@@ -39,19 +44,16 @@ InputLayer::InputLayer(ifstream* fpTrain, ifstream* fpTest, int batch, int train
 
     for(int i = 0;i < test;i++){
         GetPicture(fpTest);
-        Array dat(height,width);
-        dat.height = height;
-        dat.width = width;
-        for(int j = 0;j < height;j++){
-            for(int k = 0;k < width;k++){
-                dat.arr[j][k] = (double)pic[j][k] / 256.0;
+        ThirdArray dat(depth,height,width);
+        for(int j = 0;j < depth;j++){
+            for(int k = 0;k < height;k++){
+                for(int l = 0;l < width;l++){
+                    dat.thiArr[j].arr[k][l] = (double)pic[k][l] / 256.0;
+                }
             }
         }
         testData.push_back(dat);
     }
-    //fclose(fpTest);
-    //testData[0].PrintArray(fpDebug);
-    //fflush(fpDebug);
 
     if(trainData.size() != train){
         printf("Error number of picture loaded.\n");
@@ -68,13 +70,9 @@ InputLayer::InputLayer(ifstream* fpTrain, ifstream* fpTest, int batch, int train
         fprintf(fpResult, "Testing Data Successfully loaded...\n");
         fflush(fpResult);
     }
-
-    //InitShuffle();
 }
 
 void InputLayer::InitShuffle(void){
-    //fprintf(fpDebug,"Using InitShuffle\n");
-    ran.resize(numTrainData);
     for(int i = 0;i < numTrainData;i++){
         ran[i] = i;
     }
@@ -85,19 +83,25 @@ void InputLayer::InitShuffle(void){
         ran[pla] = ran[i];
         ran[i] = temp;
     }
-    // for(int i = 0;i < numTrainData;i++){
-    //     fprintf(fpDebug,"%d \n",ran[i]); 
-    // }
 }
 
-void InputLayer::StartTest(int epoch){
-    output = testData[epoch];
-}
-
-void InputLayer::forward(int num){
-    if(num == 0){
-        InitShuffle();
+void InputLayer::StartTest(int begin){
+    for(int i = 0;i < batchSize;i++){
+        if(begin + i > TestData){
+            fprintf(fpDebug,"Unable to load batch data for testing.\n");
+            exit(0);
+        }
+        output[i] = testData[begin + i];
     }
-    int tar = ran[num];
-    output = trainData[tar];
+}
+
+void InputLayer::forward(int begin){
+    for(int i = 0;i < batchSize;i++){
+        if(begin + i > TrainData){
+            fprintf(fpDebug,"Unable to load batch data for training.\n");
+            exit(0);
+        }
+        int tar = ran[begin + i];
+        output[i] = trainData[tar];
+    }    
 }
