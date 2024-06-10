@@ -36,7 +36,7 @@ There is NO WARRANTY, to the extent permitted by law.
 
 在mainv1.cpp - mainv5.cpp(mainv4.cpp除外)选择一个main函数复制粘贴到main.cpp
 
-注：运行SR模式(mainv5.cpp)需要进行数据准备
+注：运行SR模式(mainv5.cpp)可能需要进行数据准备
 
 在sr文件夹的train文件夹下有对应url，下载后解压到该文件夹下，之后运行“dataprovider.py”生成对应的bin后缀文件
 
@@ -46,7 +46,9 @@ There is NO WARRANTY, to the extent permitted by law.
 
 ### 5. 运行模型中的pytorch模型
 
-完成第三步的数据准备工作后，在pytorch文件夹打开对应的“readme.md”，根据该文件的提示训练，在model文件夹中预留了一个预训练模型
+代码来源：https://github.com/Mirwaisse/SRCNN ，在源代码基础上进行过修改
+
+完成第三步的数据准备工作后(文件夹中只有10张图片，直接运行应该不会报错但是模型效果会很差)，在pytorch文件夹打开对应的“readme.md”，根据该文件的提示训练，在model文件夹中预留了一个预训练模型
 
 ## 二. 模型的缺陷
 
